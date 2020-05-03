@@ -1,0 +1,16 @@
+﻿@model List<CheeseMVC.Models.Menu>
+@*
+    For more information on enabling MVC for empty projects, visit https://go.microsoft.com/fwlink/?LinkID=397860
+*@
+@{
+ 
+    @foreach (var menu in Model)
+    {
+        <a asp-controller="Menu" asp-action="ViewMenu" asp-route-id= "@menu.ID">@menu.Name</a>
+        <br/>
+    }
+   
+    <p><a asp-controller="Menu" asp-action="Add">Add Menu</a></p>
+
+}
+

@@ -4,6 +4,8 @@ using System.Collections.Generic;
 using CheeseMVC.ViewModels;
 using CheeseMVC.Data;
 using System.Linq;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.AspNetCore.Mvc.Rendering;
 
 namespace CheeseMVC.Controllers
 {
@@ -19,14 +21,13 @@ namespace CheeseMVC.Controllers
         // GET: /<controller>/
         public IActionResult Index()
         {
-            List<Cheese> cheeses = context.Cheeses.ToList();
-
+            IList<Cheese> cheeses = context.Cheeses.Include(c => c.Category).ToList();
             return View(cheeses);
         }
 
         public IActionResult Add()
         {
-            AddCheeseViewModel addCheeseViewModel = new AddCheeseViewModel();
+            AddCheeseViewModel addCheeseViewModel = new AddCheeseViewModel(context.Categories.ToList());
             return View(addCheeseViewModel);
         }
 
@@ -35,12 +36,15 @@ namespace CheeseMVC.Controllers
         {
             if (ModelState.IsValid)
             {
+                CheeseCategory newCheeseCategory =
+                    context.Categories.Single(c => c.ID == addCheeseViewModel.CategoryID);
+
                 // Add the new cheese to my existing cheeses
                 Cheese newCheese = new Cheese
                 {
                     Name = addCheeseViewModel.Name,
                     Description = addCheeseViewModel.Description,
-                    Type = addCheeseViewModel.Type
+                    Category = newCheeseCategory
                 };
 
                 context.Cheeses.Add(newCheese);
@@ -48,7 +52,17 @@ namespace CheeseMVC.Controllers
 
                 return Redirect("/Cheese");
             }
-
+            //this rebuilds category options, because they were getting lost after one invalid attempt (missing a field)
+            IEnumerable<CheeseCategory> categories = context.Categories.ToList();
+            addCheeseViewModel.Categories = new List<SelectListItem>();
+            foreach (var category in categories)
+            {
+                addCheeseViewModel.Categories.Add(new SelectListItem
+                {
+                    Value = category.ID.ToString(),
+                    Text = category.Name
+                });
+            }
             return View(addCheeseViewModel);
         }
 
